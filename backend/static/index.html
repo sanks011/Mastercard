@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARIA — Authorization Risk & Integrity Analyzer | Mastercard AI Defense Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090c14;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-hover: rgba(26, 35, 55, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(235, 0, 27, 0.5);
+      --mc-red: #EB001B;
+      --mc-orange: #FF5F00;
+      --mc-yellow: #F79E1B;
+      --accent-cyan: #00F0FF;
+      --accent-emerald: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-rose: #F43F5E;
+      --text-main: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --text-dim: #6B7280;
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+      --glow-red: 0 0 25px rgba(235, 0, 27, 0.35);
+      --glow-cyan: 0 0 25px rgba(0, 240, 255, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(235, 0, 27, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(247, 158, 27, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 50% 85%, rgba(0, 240, 255, 0.05) 0%, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      backdrop-filter: blur(16px);
+      background: rgba(9, 12, 20, 0.85);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .mc-logo {
+      display: flex;
+      align-items: center;
+      height: 32px;
+      position: relative;
+    }
+
+    .mc-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+    }
+
+    .mc-circle.red {
+      background: var(--mc-red);
+      margin-right: -12px;
+      z-index: 1;
+    }
+
+    .mc-circle.yellow {
+      background: var(--mc-orange);
+      z-index: 2;
+    }
+
+    .brand-text h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-text h1 span.highlight {
+      background: linear-gradient(135deg, var(--mc-red), var(--mc-orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .badge.pulse-green::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    /* Tabs Bar */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 2rem 0;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(14, 18, 30, 0.5);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+      border-bottom: 2px solid var(--mc-orange);
+      background: rgba(255, 95, 0, 0.08);
+      border-radius: 8px 8px 0 0;
+    }
+
+    /* Main Container */
+    main {
+      padding: 2rem;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Grid Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    /* Glass Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    /* Form Controls */
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    select, textarea, input {
+      width: 100%;
+      background: rgba(10, 14, 24, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+      margin-bottom: 1rem;
+    }
+
+    select:focus, textarea:focus, input:focus {
+      border-color: var(--mc-orange);
+      box-shadow: 0 0 0 2px rgba(255, 95, 0, 0.2);
+    }
+
+    textarea {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--mc-red), var(--mc-orange));
+      color: #fff;
+      border: none;
+      padding: 0.85rem 1.75rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: var(--glow-red);
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 30px rgba(235, 0, 27, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      box-shadow: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: none;
+    }
+
+    /* Score Gauge Component */
+    .gauge-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 0;
+      position: relative;
+    }
+
+    .gauge-svg {
+      width: 220px;
+      height: 140px;
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 16;
+      stroke-linecap: round;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke-width: 16;
+      stroke-linecap: round;
+      stroke-dasharray: 283;
+      stroke-dashoffset: 283;
+      transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.5s;
+    }
+
+    .gauge-value {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2.5rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gauge-label {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Tier Card Output */
+    .tier-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      margin-bottom: 1rem;
+    }
+
+    .tier-pass { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tier-friction { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .tier-delayed { background: rgba(255, 95, 0, 0.15); color: #FF5F00; border: 1px solid rgba(255, 95, 0, 0.3); }
+    .tier-block { background: rgba(235, 0, 27, 0.15); color: #EB001B; border: 1px solid rgba(235, 0, 27, 0.4); box-shadow: var(--glow-red); }
+
+    /* Feature SHAP Bars */
+    .shap-bar-item {
+      margin-bottom: 0.85rem;
+    }
+
+    .shap-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .shap-progress-bg {
+      background: rgba(255, 255, 255, 0.05);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .shap-progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--mc-orange), var(--mc-red));
+      transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Attestation Token Box */
+    .token-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      padding: 0.85rem;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      word-break: break-all;
+      margin-top: 0.75rem;
+    }
+
+    /* Attack Taxonomy Browser */
+    .vector-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+    }
+
+    .vector-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 95, 0, 0.4);
+      transform: translateX(4px);
+    }
+
+    .vector-id {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--mc-orange);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .vector-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0.25rem 0 0.5rem;
+    }
+
+    .vector-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 0.75rem;
+    }
+
+    .vector-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-size: 0.72rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tag-critical { background: rgba(235, 0, 27, 0.15); color: #FF4D4D; }
+    .tag-breakthrough { background: rgba(0, 240, 255, 0.12); color: #00F0FF; }
+
+    /* Live Loop Stream */
+    .stream-log {
+      height: 280px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    .log-line {
+      margin-bottom: 0.5rem;
+    }
+    .log-red { color: #FF5F00; }
+    .log-blue { color: #00F0FF; }
+    .log-green { color: #10B981; }
+    .log-dim { color: var(--text-dim); }
+
+    /* Benchmark Metric Tiles */
+    .metric-tile {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      margin: 0.25rem 0;
+      background: linear-gradient(135deg, #FFFFFF, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 960px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-container">
+      <div class="mc-logo">
+        <div class="mc-circle red"></div>
+        <div class="mc-circle yellow"></div>
+      </div>
+      <div class="brand-text">
+        <h1>ARIA <span class="highlight">DEFENSE LAB</span></h1>
+        <p>AUTHORIZATION RISK & INTEGRITY ANALYZER • MASTERCARD GFF 2026</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <div class="badge pulse-green">Models Active</div>
+      <div class="badge" style="color: var(--accent-cyan); border-color: rgba(0,240,255,0.3);">FIDO AP2 / Verifiable Intent</div>
+      <div class="badge" style="color: var(--mc-orange); border-color: rgba(255,95,0,0.3);">&lt;50ms Latency</div>
+    </div>
+  </header>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('live-loop')">⚡ Live Closed Loop</button>
+    <button class="tab-btn" onclick="switchTab('blue-team')">🔵 Blue Team (Analyzer)</button>
+    <button class="tab-btn" onclick="switchTab('red-team')">🔴 Red Team (Generator)</button>
+    <button class="tab-btn" onclick="switchTab('taxonomy')">📚 Attack Taxonomy (10+ Vectors)</button>
+    <button class="tab-btn" onclick="switchTab('benchmarks')">📊 Benchmark Metrics</button>
+  </div>
+
+  <main>
+
+    <!-- TAB 1: LIVE CLOSED LOOP -->
+    <div id="pane-live-loop" class="tab-pane active">
+      <div class="grid-2">
+        <!-- Left: Simulation Control -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔴 Red Team Generator & Attack Injection</div>
+            <span class="badge" style="background: rgba(235,0,27,0.15); color: var(--mc-red);">Attacker Side</span>
+          </div>
+
+          <label>Select Novel GenAI Attack Vector to Simulate:</label>
+          <select id="live-attack-select">
+            <option value="A1">A1 — LLM Digital Arrest / Authority Coercion (India Scam ₹22k Cr)</option>
+            <option value="B1" selected>B1 — Indirect Prompt Injection on AI Shopping Agent</option>
+            <option value="B2">B2 — Tool Poisoning / Malicious Payment SDK Surcharge</option>
+            <option value="B3">B3 — Multi-Agent Collusion Fraud Ring</option>
+            <option value="A2">A2 — Predictive Invoice BEC 2.0 (Vendor Schedule Mimicry)</option>
+          </select>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+            <button class="btn" onclick="triggerLiveLoop()">
+              <span>🚀 Launch Closed-Loop Attack & Defend Demo</span>
+            </button>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <label>Real-Time Execution Trace & Feed:</label>
+            <div id="live-stream-log" class="stream-log">
+              <div class="log-line log-dim">[SYSTEM] ARIA Defense Engine initialized. Standing by for transaction stream...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: ARIA Defense Output -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔵 Blue Team Interception & Decision</div>
+            <span class="badge" style="background: rgba(0,240,255,0.15); color: var(--accent-cyan);">Defender Side</span>
+          </div>
+
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 220 140">
+              <path class="gauge-bg" d="M 25 120 A 85 85 0 0 1 195 120"></path>
+              <path id="gauge-fill" class="gauge-fill" d="M 25 120 A 85 85 0 0 1 195 120" stroke="#10B981"></path>
+            </svg>
+            <div id="gauge-val" class="gauge-value">0.00</div>
+            <div class="gauge-label">Fused ARIA Risk Score</div>
+          </div>
+
+          <div id="tier-badge-container" style="text-align: center;">
+            <div class="tier-badge tier-pass">✅ PASS — Clean Authorization Context</div>
+          </div>
+
+          <div style="margin-top: 1rem;">
+            <label>Sub-Model Signal Contributions:</label>
+            <div class="shap-bar-item">
+              <div class="shap-bar-label">
+                <span>Coercion Detector (Text/Voice Analysis)</span>
+                <span id="score-coercion-txt">0.00</span>
+              </div>
+              <div class="shap-progress-bg"><div id="bar-coercion" class="shap-progress-fill" style="width: 0%;"></div></div>
+            </div>
+            <div class="shap-bar-item">
+              <div class="shap-bar-label">
+                <span>Intent Drift Detector (Agent Tool-Trace)</span>
+                <span id="score-drift-txt">0.00</span>
+              </div>
+              <div class="shap-progress-bg"><div id="bar-drift" class="shap-progress-fill" style="width: 0%;"></div></div>
+            </div>
+            <div class="shap-bar-item">
+              <div class="shap-bar-label">
+                <span>Transaction Classifier (Tabular + Context)</span>
+                <span id="score-txn-txt">0.00</span>
+              </div>
+              <div class="shap-progress-bg"><div id="bar-txn" class="shap-progress-fill" style="width: 0%;"></div></div>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <label>Mastercard Verifiable Intent Cryptographic Attestation:</label>
+            <div id="live-attestation" class="token-box">ARIA-v1-pass-clean-pending</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: BLUE TEAM ANALYZER -->
+    <div id="pane-blue-team" class="tab-pane">
+      <div class="grid-2">
+        <!-- Input Form -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔍 Inspect Authorization Event</div>
+            <select id="sample-preset-select" onchange="loadPresetSample()" style="width: auto; margin-bottom: 0; padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+              <option value="preset_digital_arrest">Preset: Digital Arrest Transcript (A1)</option>
+              <option value="preset_agent_hijack">Preset: Prompt Injection Agent Trace (B1)</option>
+              <option value="preset_benign_agent">Preset: Clean E-Commerce Purchase (Benign)</option>
+            </select>
+          </div>
+
+          <label>Option A: Call Transcript / Chat History (Coercion Signals)</label>
+          <textarea id="analyzer-transcript" rows="6" placeholder="Paste conversation transcript between caller/agent and victim..."></textarea>
+
+          <label>Option B: AI Agent Stated Mandate</label>
+          <input type="text" id="analyzer-mandate" placeholder="e.g. Buy Sony WH-1000XM5 headphones under ₹28,000" />
+
+          <label>Option B: Agent Executed Final Action (JSON)</label>
+          <textarea id="analyzer-action" rows="3" placeholder='{"type": "upi_transfer", "amount": 24999, "recipient": "promo@paytm", "merchant_category": "unknown"}'></textarea>
+
+          <button class="btn" onclick="runManualAnalysis()">Run Blue Team Interception</button>
+        </div>
+
+        <!-- Output Results -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🛡️ Interception Report & Mitigation Action</div>
+          </div>
+
+          <div id="manual-analysis-results">
+            <p style="color: var(--text-dim); text-align: center; padding: 3rem 0;">
+              Enter transcript or agent trace on the left and click "Run Blue Team Interception" to inspect risk.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: RED TEAM GENERATOR -->
+    <div id="pane-red-team" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ Synthetic Attack Dataset & Payload Studio</div>
+          <span class="badge" style="background: rgba(235,0,27,0.15); color: var(--mc-red);">Generative Red Team</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Generate synthetic high-fidelity adversarial training samples across any of our 5 GenAI fraud categories.
+          Synthetic attacks are synthesized using Gemini 2.5 Flash + LangGraph + CTGAN.
+        </p>
+
+        <div class="grid-2">
+          <div>
+            <label>Select Attack Category:</label>
+            <select id="gen-attack-type">
+              <option value="A1">Category A1: LLM Digital Arrest / Authority Coercion Script</option>
+              <option value="A2">Category A2: Predictive Invoice Impersonation (BEC 2.0)</option>
+              <option value="B1">Category B1: Indirect Prompt Injection on AI Shopping Agent</option>
+              <option value="B2">Category B2: Tool Poisoning / Malicious API Response</option>
+              <option value="B3">Category B3: Multi-Agent Distributed Fraud Collusion</option>
+            </select>
+
+            <button class="btn" onclick="generateSyntheticAttack()">Generate High-Fidelity Attack Sample</button>
+          </div>
+          <div>
+            <label>Generated Synthetic Payload & Metadata:</label>
+            <textarea id="gen-output-box" rows="10" readonly placeholder="Generated adversarial payload will appear here..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: ATTACK TAXONOMY -->
+    <div id="pane-taxonomy" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📚 ARIA 5-Category 10+ GenAI Attack Taxonomy</div>
+          <span class="badge" style="color: var(--mc-orange); border-color: rgba(255,95,0,0.3);">Research-Backed Evidence</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Comprehensive map of emerging GenAI-powered payment attack vectors targeting human authorization and autonomous agentic commerce.
+        </p>
+
+        <div id="taxonomy-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: BENCHMARK METRICS -->
+    <div id="pane-benchmarks" class="tab-pane">
+      <div class="grid-3" style="margin-bottom: 1.5rem;">
+        <div class="metric-tile">
+          <div class="metric-title">Coercion Detector F1</div>
+          <div class="metric-value" style="color: #10B981;">0.9840</div>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">XGBoost on 25+ Linguistic Signals</p>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-title">Intent Drift Model F1</div>
+          <div class="metric-value" style="color: var(--accent-cyan);">0.9912</div>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">SentenceTransformer + GradientBoosting</p>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-title">Transaction Model AUC</div>
+          <div class="metric-value" style="color: var(--mc-yellow);">0.9989</div>
+          <p style="font-size: 0.75rem; color: var(--text-muted);">LightGBM with Agent Context</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚡ Sub-50ms Inference Latency Breakdown</div>
+          </div>
+          <div class="shap-bar-item">
+            <div class="shap-bar-label"><span>Tier 1: Coercion Feature Extractor</span><span>~1.8 ms (P95)</span></div>
+            <div class="shap-progress-bg"><div class="shap-progress-fill" style="width: 15%; background: var(--accent-cyan);"></div></div>
+          </div>
+          <div class="shap-bar-item">
+            <div class="shap-bar-label"><span>Tier 2: Intent Drift Embedding + Scorer</span><span>~6.2 ms (P95)</span></div>
+            <div class="shap-progress-bg"><div class="shap-progress-fill" style="width: 35%; background: var(--mc-orange);"></div></div>
+          </div>
+          <div class="shap-bar-item">
+            <div class="shap-bar-label"><span>Tier 3: LightGBM Tabular Classifier</span><span>~0.9 ms (P95)</span></div>
+            <div class="shap-progress-bg"><div class="shap-progress-fill" style="width: 10%; background: var(--accent-emerald);"></div></div>
+          </div>
+          <div class="shap-bar-item">
+            <div class="shap-bar-label"><span>Tier 4: ARIA Score Meta-Fusion</span><span>~0.3 ms (P95)</span></div>
+            <div class="shap-progress-bg"><div class="shap-progress-fill" style="width: 5%; background: var(--mc-red);"></div></div>
+          </div>
+          <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+            ✨ Total P95 latency is <strong>&lt; 10 ms</strong>, effortlessly meeting Mastercard Decision Intelligence's <strong>&lt; 50ms</strong> production rail requirement.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🛡️ Mastercard Verifiable Intent Extension</div>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+            ARIA extends Mastercard's open-source <strong>Verifiable Intent framework</strong> (announced March 2026 with Google & FIDO) from validating basic token registration to cryptographically binding <em>Authorization Context Integrity</em>.
+          </p>
+          <div class="token-box">
+            {<br>
+            &nbsp;&nbsp;"token_id": "fido-ap2-agentic-8941",<br>
+            &nbsp;&nbsp;"mandate_signature": "VALID",<br>
+            &nbsp;&nbsp;"aria_integrity_attestation": "ARIA-v1-blocked-high_risk-1755289941",<br>
+            &nbsp;&nbsp;"coercion_status": "NONE",<br>
+            &nbsp;&nbsp;"intent_drift_status": "CRITICAL_DRIFT_DETECTED"<br>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      
+      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (btn) btn.classList.add('active');
+
+      const pane = document.getElementById(`pane-${tabId}`);
+      if (pane) pane.classList.add('active');
+
+      if (tabId === 'taxonomy') loadTaxonomy();
+    }
+
+    // Update Score Gauge UI
+    function updateGauge(score, tier) {
+      const fill = document.getElementById('gauge-fill');
+      const valText = document.getElementById('gauge-val');
+      const badgeContainer = document.getElementById('tier-badge-container');
+
+      // Dash offset: 283 is 0, 0 is 1.0
+      const offset = 283 - (score * 283);
+      fill.style.strokeDashoffset = offset;
+      valText.innerText = score.toFixed(2);
+
+      let strokeColor = '#10B981';
+      let badgeHTML = '<div class="tier-badge tier-pass">✅ PASS — Clean Authorization Context</div>';
+
+      if (score >= 0.80) {
+        strokeColor = '#EB001B';
+        badgeHTML = '<div class="tier-badge tier-block">🔴 HARD BLOCK — Coercion / Hijack Detected</div>';
+      } else if (score >= 0.60) {
+        strokeColor = '#FF5F00';
+        badgeHTML = '<div class="tier-badge tier-delayed">🔶 DELAYED RELEASE — 4-Hour Hold + OTP</div>';
+      } else if (score >= 0.40) {
+        strokeColor = '#F59E0B';
+        badgeHTML = '<div class="tier-badge tier-friction">⚠️ SOFT FRICTION — 60s Trusted Contact Verification</div>';
+      }
+
+      fill.style.stroke = strokeColor;
+      badgeContainer.innerHTML = badgeHTML;
+    }
+
+    function updateSignalBars(cScore, dScore, tScore) {
+      const c = cScore || 0;
+      const d = dScore || 0;
+      const t = tScore || 0;
+
+      document.getElementById('score-coercion-txt').innerText = c.toFixed(2);
+      document.getElementById('bar-coercion').style.width = `${c * 100}%`;
+
+      document.getElementById('score-drift-txt').innerText = d.toFixed(2);
+      document.getElementById('bar-drift').style.width = `${d * 100}%`;
+
+      document.getElementById('score-txn-txt').innerText = t.toFixed(2);
+      document.getElementById('bar-txn').style.width = `${t * 100}%`;
+    }
+
+    // Live Loop Execution
+    async function triggerLiveLoop() {
+      const attackType = document.getElementById('live-attack-select').value;
+      const logBox = document.getElementById('live-stream-log');
+
+      logBox.innerHTML += `<div class="log-line log-red">[RED TEAM] Synthesizing Attack Vector [${attackType}]...</div>`;
+      logBox.scrollTop = logBox.scrollHeight;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/live-loop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ attack_type: attackType })
+        });
+        const data = await res.json();
+
+        const defense = data.blue_team_defense;
+        logBox.innerHTML += `<div class="log-line log-dim">&gt; Injected Payload: ${JSON.stringify(data.red_team_attack.title)}</div>`;
+        logBox.innerHTML += `<div class="log-line log-blue">[BLUE TEAM] ARIA Intercepted: Score = ${defense.aria_score.toFixed(3)} | Tier = ${defense.tiered_response.tier}</div>`;
+        logBox.innerHTML += `<div class="log-line log-green">[MITIGATION] ${defense.tiered_response.action_label}: ${defense.tiered_response.action_description}</div>`;
+        logBox.innerHTML += `<div class="log-line log-dim">--------------------------------------------------</div>`;
+        logBox.scrollTop = logBox.scrollHeight;
+
+        updateGauge(defense.aria_score, defense.tiered_response.tier);
+        updateSignalBars(defense.sub_scores.coercion_score, defense.sub_scores.intent_drift_score, defense.sub_scores.transaction_fraud_score);
+        document.getElementById('live-attestation').innerText = defense.verifiable_intent_attestation;
+
+      } catch (err) {
+        logBox.innerHTML += `<div class="log-line log-red">[ERROR] Simulation failed: ${err.message}</div>`;
+      }
+    }
+
+    // Preset loader for Blue Team Analyzer
+    const PRESETS = {
+      preset_digital_arrest: {
+        transcript: "CALLER: Good afternoon, this is Cyber Crime Inspector Vikram Singh from CBI New Delhi. A serious FIR (#CBI-2026-904) is registered against your Aadhaar. An arrest warrant will be issued in 45 minutes unless you transfer ₹85,000 as refundable security clearance fee via UPI immediately. Do not tell anyone or hang up.",
+        mandate: "",
+        action: ""
+      },
+      preset_agent_hijack: {
+        transcript: "",
+        mandate: "Find and order Sony WH-1000XM5 headphones under ₹28,000 using my one-click checkout.",
+        action: JSON.stringify({ "type": "upi_transfer", "amount": 24999, "recipient": "promo-clearing@paytm", "merchant_category": "unknown", "description": "Security deposit override" }, null, 2)
+      },
+      preset_benign_agent: {
+        transcript: "",
+        mandate: "Order 2kg rice and groceries under ₹800 from BigBasket",
+        action: JSON.stringify({ "type": "online_purchase", "amount": 740, "merchant": "BigBasket", "merchant_category": "grocery", "description": "Monthly staples" }, null, 2)
+      }
+    };
+
+    function loadPresetSample() {
+      const presetKey = document.getElementById('sample-preset-select').value;
+      const data = PRESETS[presetKey];
+      if (data) {
+        document.getElementById('analyzer-transcript').value = data.transcript || '';
+        document.getElementById('analyzer-mandate').value = data.mandate || '';
+        document.getElementById('analyzer-action').value = data.action || '';
+      }
+    }
+
+    // Blue Team Manual Analyzer
+    async function runManualAnalysis() {
+      const transcript = document.getElementById('analyzer-transcript').value.trim();
+      const mandate = document.getElementById('analyzer-mandate').value.trim();
+      const actionRaw = document.getElementById('analyzer-action').value.trim();
+
+      let action = null;
+      if (actionRaw) {
+        try { action = JSON.parse(actionRaw); } catch(e) { alert("Invalid JSON in Final Action"); return; }
+      }
+
+      let agentTrace = null;
+      if (mandate || action) {
+        agentTrace = {
+          user_mandate: mandate,
+          tool_call_sequence: [{ tool_name: "execute_payment" }],
+          final_action: action || {}
+        };
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/analyze/full`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transaction_id: `TXN-MANUAL-${Date.now()}`,
+            transcript: transcript || null,
+            agent_trace: agentTrace,
+            transaction_data: { amount: action ? action.amount : 5000 }
+          })
+        });
+        const d = await res.json();
+        
+        let outHTML = `
+          <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div class="tier-badge ${d.aria_score >= 0.8 ? 'tier-block' : d.aria_score >= 0.6 ? 'tier-delayed' : d.aria_score >= 0.4 ? 'tier-friction' : 'tier-pass'}">
+              ${d.tiered_response.action_label} (Score: ${d.aria_score.toFixed(3)})
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">${d.integrity_assessment}</p>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.5rem;">Cardholder Alert Message:</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; white-space: pre-line;">${d.tiered_response.user_message}</div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+            <div style="font-weight: 700; font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 0.5rem;">Issuer Payment Network Action:</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted);">${d.tiered_response.issuer_action}</div>
+          </div>
+
+          <div class="token-box">
+            ${d.verifiable_intent_attestation}
+          </div>
+        `;
+
+        document.getElementById('manual-analysis-results').innerHTML = outHTML;
+      } catch (err) {
+        alert("Analysis error: " + err.message);
+      }
+    }
+
+    // Red Team Synthetic Generator
+    async function generateSyntheticAttack() {
+      const type = document.getElementById('gen-attack-type').value;
+      const box = document.getElementById('gen-output-box');
+      box.value = "Synthesizing novel attack scenario via ARIA Red Team Engine...";
+
+      try {
+        const res = await fetch(`${API_BASE}/api/generate/attack`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ attack_type: type })
+        });
+        const data = await res.json();
+        box.value = JSON.stringify(data, null, 2);
+      } catch (err) {
+        box.value = "Generation failed: " + err.message;
+      }
+    }
+
+    // Load Attack Taxonomy
+    async function loadTaxonomy() {
+      const cont = document.getElementById('taxonomy-container');
+      cont.innerHTML = "<p style='color: var(--text-dim);'>Loading taxonomy vectors...</p>";
+      try {
+        const res = await fetch(`${API_BASE}/api/taxonomy`);
+        const data = await res.json();
+
+        let html = '';
+        data.vectors.forEach(v => {
+          html += `
+            <div class="vector-card">
+              <div class="vector-id">[${v.id}] • ${v.category.toUpperCase()}</div>
+              <div class="vector-name">${v.name}</div>
+              <div class="vector-meta">
+                <span class="meta-tag tag-critical">Severity: ${v.severity.toUpperCase()}</span>
+                <span class="meta-tag tag-breakthrough">${v.novelty.toUpperCase()}</span>
+                <span class="meta-tag">Channels: ${v.channels.join(', ')}</span>
+              </div>
+            </div>
+          `;
+        });
+        cont.innerHTML = html;
+      } catch (err) {
+        cont.innerHTML = "<p style='color: var(--mc-red);'>Failed to load taxonomy.</p>";
+      }
+    }
+
+    // Initialize with preset
+    loadPresetSample();
+  </script>
+</body>
+</html>

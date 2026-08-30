@@ -1,0 +1,195 @@
+{
+  "timestamp": "2026-08-15 23:39:57",
+  "taxonomy": {
+    "total_vectors": 12,
+    "categories": 5,
+    "critical_vectors": 6,
+    "breakthrough_vectors": 5,
+    "vectors": [
+      {
+        "id": "A1",
+        "name": "LLM-Powered Digital Arrest / Vishing",
+        "category": "Authorization Coercion",
+        "severity": "critical",
+        "novelty": "emerging",
+        "channels": [
+          "voice",
+          "video_call"
+        ]
+      },
+      {
+        "id": "A2",
+        "name": "Predictive Invoice Impersonation (BEC 2.0)",
+        "category": "Authorization Coercion",
+        "severity": "high",
+        "novelty": "emerging",
+        "channels": [
+          "email",
+          "chat"
+        ]
+      },
+      {
+        "id": "A3",
+        "name": "Synthetic Relationship Romance Scam (Automated Pig Butchering)",
+        "category": "Authorization Coercion",
+        "severity": "high",
+        "novelty": "emerging",
+        "channels": [
+          "chat",
+          "social_media"
+        ]
+      },
+      {
+        "id": "B1",
+        "name": "Indirect Prompt Injection on Shopping Agents",
+        "category": "Agentic Commerce",
+        "severity": "critical",
+        "novelty": "breakthrough",
+        "channels": [
+          "agent",
+          "web"
+        ]
+      },
+      {
+        "id": "B2",
+        "name": "Tool Poisoning / Malicious API Description Injection",
+        "category": "Agentic Commerce",
+        "severity": "critical",
+        "novelty": "breakthrough",
+        "channels": [
+          "agent",
+          "api"
+        ]
+      },
+      {
+        "id": "B3",
+        "name": "Multi-Agent Collusion Fraud",
+        "category": "Agentic Commerce",
+        "severity": "critical",
+        "novelty": "breakthrough",
+        "channels": [
+          "agent",
+          "multi_channel"
+        ]
+      },
+      {
+        "id": "C1",
+        "name": "GenAI Frankenstein Identity (Slow-Burn Bust-Out)",
+        "category": "Synthetic Identity & KYC Bypass",
+        "severity": "high",
+        "novelty": "known-but-unsolved",
+        "channels": [
+          "onboarding",
+          "credit"
+        ]
+      },
+      {
+        "id": "C2",
+        "name": "RAG Poisoning of Fraud Detection Systems",
+        "category": "Synthetic Identity & KYC Bypass",
+        "severity": "critical",
+        "novelty": "breakthrough",
+        "channels": [
+          "system_attack"
+        ]
+      },
+      {
+        "id": "D1",
+        "name": "Gradient-Guided Transaction Morphing (RL-Based Evasion)",
+        "category": "Adversarial ML Evasion",
+        "severity": "high",
+        "novelty": "emerging",
+        "channels": [
+          "transaction"
+        ]
+      },
+      {
+        "id": "D2",
+        "name": "GAN-Synthesized Ghost Transactions",
+        "category": "Adversamal ML Evasion",
+        "severity": "high",
+        "novelty": "emerging",
+        "channels": [
+          "transaction"
+        ]
+      },
+      {
+        "id": "E1",
+        "name": "Mandate Scope Creep via Ambiguity Exploitation",
+        "category": "Agentic Infrastructure",
+        "severity": "critical",
+        "novelty": "breakthrough",
+        "channels": [
+          "agent",
+          "token"
+        ]
+      },
+      {
+        "id": "E2",
+        "name": "Stale Consent Token Replay Attack",
+        "category": "Agentic Infrastructure",
+        "severity": "high",
+        "novelty": "emerging",
+        "channels": [
+          "agent",
+          "token"
+        ]
+      }
+    ]
+  },
+  "models": {
+    "coercion_detector": {
+      "model_type": "XGBoost (25+ Linguistic & Behavioral Signals)",
+      "metrics": {
+        "f1": 1.0,
+        "auc": 1.0,
+        "f1_std": 0.0
+      },
+      "latency": {
+        "p50_ms": 1.39,
+        "p95_ms": 2.7,
+        "p99_ms": 4.55,
+        "mean_ms": 1.58
+      }
+    },
+    "intent_drift_detector": {
+      "model_type": "Sentence-Transformer (MiniLM) + GradientBoosting",
+      "metrics": {
+        "f1": 1.0,
+        "auc": 1.0
+      },
+      "latency": {
+        "p50_ms": 2.8,
+        "p95_ms": 4.1,
+        "p99_ms": 4.89,
+        "mean_ms": 2.91
+      }
+    },
+    "transaction_classifier": {
+      "model_type": "LightGBM with Agentic Context Embeddings",
+      "metrics": {
+        "roc_auc": 1.0,
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "cv_auc_mean": 0.9999871428571427,
+        "cv_f1_mean": 0.9996426444312091
+      },
+      "latency": {
+        "p50_ms": 21.61,
+        "p95_ms": 35.73,
+        "p99_ms": 43.22,
+        "mean_ms": 23.55
+      }
+    },
+    "aria_fusion_engine": {
+      "latency": {
+        "p50_ms": 0.04,
+        "p95_ms": 0.13,
+        "p99_ms": 0.53,
+        "mean_ms": 0.07
+      },
+      "end_to_end_latency_p95_ms": 42.66
+    }
+  }
+}
